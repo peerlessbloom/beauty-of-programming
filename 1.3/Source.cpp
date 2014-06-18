@@ -10,8 +10,11 @@ public:
 	}
 	~CPrefixSorting()
 	{
-		//Ignore
-	}
+		if (m_CakeArray) delete[] m_CakeArray;
+        if (m_ReverseCakeArray) delete[] m_ReverseCakeArray;
+        if (m_SwapArray) delete[] m_SwapArray;
+        if (m_ReverseCakeArraySwap) delete[] m_ReverseCakeArraySwap;
+    }
 	void run(int *pCakeArray, int nCakeCnt)
 	{
 		init(pCakeArray, nCakeCnt);
@@ -40,13 +43,33 @@ private:
 			m_CakeArray[i] = pCakeArray[i];
 			m_ReverseCakeArray[i] = pCakeArray[i];
 		}
-		m_nMaxSwap = UpBound(m_nCakeCnt);
+		m_nMaxSwap = UpBound();
 		m_SwapArray = new int[m_nMaxSwap + 1];
 		m_ReverseCakeArraySwap = new int[m_nMaxSwap];
 	}
-	int UpBound(int nCakeCnt) const
+	int UpBound()
 	{
-		return (nCakeCnt - 1) * 2 - 1;
+        int count = 0;
+        int index = m_nCakeCnt - 1;
+        while (true)
+        {
+            while (index > 0 && m_CakeArray[index] == index) {
+                index--;
+            }
+            if (index <= 0) break;
+            int revertPos = index;
+            while (revertPos > 0 && m_CakeArray[revertPos] != index) {
+                revertPos--;
+            }
+            if (revertPos != 0)
+            {
+                Revert(revertPos, m_CakeArray);
+                count++;
+            }
+            Revert(index, m_CakeArray);
+            count++;
+        }
+		return count;
 	}
 	int LowerBound() const
 	{
@@ -93,10 +116,10 @@ private:
 			{
 				continue;
 			}
-			Revert(i);
+			Revert(i, m_ReverseCakeArray);
 			m_ReverseCakeArraySwap[step] = i;
 			Search(step + 1);
-			Revert(i);
+			Revert(i, m_ReverseCakeArray);
 		}
 	}
 	bool IsSorted()
@@ -110,14 +133,14 @@ private:
 		}
 		return true;
 	}
-	void Revert(int deep)
+	void Revert(int deep, int * array)
 	{
 		int i, j, temp;
 		for (i = 0, j = deep; i < j; i++, j--)
 		{
-			temp = m_ReverseCakeArray[i];
-			m_ReverseCakeArray[i] = m_ReverseCakeArray[j];
-			m_ReverseCakeArray[j] = temp;
+			temp = array[i];
+			array[i] = array[j];
+			array[j] = temp;
 		}
 	}
 private:
@@ -129,7 +152,7 @@ private:
 	int *m_SwapArray;
 	int *m_ReverseCakeArraySwap;
 };
-int main1()
+int main()
 {
 	int nCakeCnt = 10;
 	int nCakeArray[10] = { 3, 2, 1, 6, 5, 4, 9, 8, 7, 0 };
